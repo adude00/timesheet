@@ -457,6 +457,14 @@ def make_app(
         )
         return redirect("/times", code=303)
 
+    def _entry_back():
+        """Where a failed form should send the user back to: the entry page it
+        came from (so they can fix the values in place), otherwise /times."""
+        raw = request.form.get("interval_id", "").strip()
+        if request.form.get("from") == "entry" and raw.isdigit():
+            return f"/times/entry/{int(raw)}"
+        return "/times"
+
     @app.route("/times/edit", methods=["POST"])
     def times_edit():
         token = _manual_common()
@@ -484,7 +492,7 @@ def make_app(
             start = row[0]
         if errors:
             _set_form_errors(errors)
-            return redirect("/times", code=303)
+            return redirect(_entry_back(), code=303)
         result = db.update_interval(interval_id, start, end, token=token)
         _flash_db(
             result,
@@ -492,6 +500,12 @@ def make_app(
                 f"Saved: interval #{result['interval_id']} corrected."
             ),
         )
+        if not result["ok"]:
+            # Rejected (overlap, end before start, ...): stay on the same page
+            # and keep the typed values in the form so the user can fix one
+            # field and try again.
+            session["echo"] = {"fields": _echo_values(), "errors": {}}
+            return redirect(_entry_back(), code=303)
         # Editing from an entry page returns to the calm home page, not the
         # general edit page; from /times it stays on /times.
         return redirect("/" if request.form.get("from") == "entry" else "/times", code=303)
@@ -507,11 +521,14 @@ def make_app(
             )
         if errors:
             _set_form_errors(errors)
-            return redirect("/times", code=303)
+            return redirect(_entry_back(), code=303)
         result = db.delete_interval(interval_id, token=token)
         _flash_db(
             result, lambda result: f"Saved: interval #{result['interval_id']} deleted.",
         )
+        if not result["ok"]:
+            session["echo"] = {"fields": _echo_values(), "errors": {}}
+            return redirect(_entry_back(), code=303)
         return redirect("/" if request.form.get("from") == "entry" else "/times", code=303)
 
     def _interval_id(errors):
@@ -547,6 +564,9 @@ def make_app(
             "end_date": "" if end is None else format_date(tz, end),
             "end_time": "" if end is None else format_clock(tz, end),
         }
+        echo = session.get("echo", {"fields": {}, "errors": {}})
+        if echo["fields"].get("interval_id") != str(interval_id):
+            echo = {"fields": {}, "errors": {}}  # stale echo from another entry
         return render_template(
             "entry.html",
             entry=entry,
@@ -554,6 +574,7 @@ def make_app(
             op=session["op"],
             flash=session.get("flash"),
             timezone=tz_name(tz),
+            echo=echo,
         )
 
     def _month_options():

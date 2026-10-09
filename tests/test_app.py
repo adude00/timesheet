@@ -271,7 +271,9 @@ def test_entry_page_offers_delete(tmp_path):
     )
     assert "Saved: interval #1 recorded" in added.text
     page = client.get("/times/entry/1")
-    assert "Delete entry #1" in page.text
+    assert ">Delete</button>" in page.text
+    # The confirmation is pre-filled: one button click is enough from here.
+    assert 'type="hidden" name="confirm" value="DELETE"' in page.text
 
 
 def test_delete_without_confirmation_is_rejected(tmp_path):
@@ -366,6 +368,37 @@ def test_edit_from_times_page_still_returns_to_times(tmp_path):
     )
     assert response.status_code == 303
     assert response.headers["Location"] == "/times"
+
+
+def test_rejected_edit_from_entry_page_stays_on_that_entry_page(tmp_path):
+    server_clock.set_now(1_717_236_000)
+    _app, client = _make(tmp_path)
+    _c, added = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-06-01", "start_time": "09:00", "end_date": "2024-06-01",
+         "end_time": "12:00"},
+    )
+    assert "Saved: interval #1 recorded" in added.text
+    page = client.get("/times/entry/1")
+    csrf = re.search(r'name="_t" value="([^"]+)"', page.text).group(1)
+    op = re.search(r'name="_op" value="([^"]+)"', page.text).group(1)
+    response = client.post(
+        "/times/edit",
+        data={"_t": csrf, "_op": op, "from": "entry", "interval_id": "1",
+              "start_date": "2024-06-01", "start_time": "09:00",
+              "end_date": "2024-06-01", "end_time": "08:00"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/times/entry/1"
+    page = client.get("/times/entry/1")
+    assert "flash-error" in page.text
+    # The user's typed values are kept in the form so they can fix one field.
+    assert 'name="end_time" value="08:00"' in page.text
+    # Nothing was saved.
+    db = Db(tmp_path / "timesheet.sqlite3")
+    assert db.fetch_all()[0][2] == 1_717_236_000
 
 
 def test_report_dropdown_lists_months_with_data(tmp_path):

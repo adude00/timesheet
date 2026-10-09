@@ -19,7 +19,10 @@
 {% macro field(name, label, default='') %}
 <span class="field">
   <label>{{ label }}</label>
-  <input type="text" name="{{ name }}" value="{{ default }}">
+  <input type="text" name="{{ name }}" value="{{ echo.fields.get(name, default) }}">
+  {% if echo.errors.get(name) %}
+  <span class="field-error field-{{ name }}">{{ echo.errors[name] }}</span>
+  {% endif %}
 </span>
 {% endmacro %}
 
@@ -45,10 +48,10 @@
 <form method="post" action="/times/delete" class="op">
   <input type="hidden" name="interval_id" value="{{ entry.id }}">
   <input type="hidden" name="from" value="entry">
-  {{ field('confirm', 'Type DELETE to confirm', '') }}
+  <input type="hidden" name="confirm" value="DELETE">
   <input type="hidden" name="_t" value="{{ csrf }}">
   <input type="hidden" name="_op" value="{{ op }}">
-  <button type="submit" class="big">Delete entry #{{ entry.id }}</button>
+  <button type="submit" class="big">Delete</button>
 </form>
 
 <p class="links"><a href="/">Home</a> &middot; <a href="/times">Add / correct times</a></p>
