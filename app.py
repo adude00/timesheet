@@ -255,6 +255,11 @@ def make_app(
                     "in": format_clock(tz, start),
                     "out": "open" if end is None else format_clock(tz, end),
                     "open": end is None,
+                    # Raw local values so the entry page can pre-fill the edit form.
+                    "start_date": format_date(tz, start),
+                    "start_time": format_clock(tz, start),
+                    "end_date": "" if end is None else format_date(tz, end),
+                    "end_time": "" if end is None else format_clock(tz, end),
                 }
             )
         return labels
@@ -516,6 +521,40 @@ def make_app(
         except ValueError:
             errors["interval_id"] = "Pick one of the listed interval numbers."
             return -1
+
+    @app.route("/times/entry/<int:interval_id>")
+    def times_entry(interval_id):
+        """One entry, clicked from an interval list: shows it and offers Edit.
+
+        The edit form is pre-filled with the currently recorded values, so the
+        user only has to change the fields that are actually wrong.
+        """
+        _ensure_tokens()
+        row = None
+        for _row_id, start, end, _c, _u in db.fetch_all():
+            if _row_id == interval_id:
+                row = (start, end)
+                break
+        if row is None:
+            _flash("error", "That interval no longer exists - reload the page and pick again.")
+            return redirect("/times", code=303)
+        start, end = row
+        entry = {
+            "id": interval_id,
+            "open": end is None,
+            "start_date": format_date(tz, start),
+            "start_time": format_clock(tz, start),
+            "end_date": "" if end is None else format_date(tz, end),
+            "end_time": "" if end is None else format_clock(tz, end),
+        }
+        return render_template(
+            "entry.html",
+            entry=entry,
+            csrf=session["csrf"],
+            op=session["op"],
+            flash=session.get("flash"),
+            timezone=tz_name(tz),
+        )
 
     @app.route("/report")
     def report_page():

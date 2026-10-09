@@ -52,13 +52,14 @@
 <h2>Recent entries</h2>
 {% if view.recent %}
 <table class="recent">
-  <tr><th>#</th><th>Date</th><th>IN</th><th>OUT</th></tr>
+  <tr><th>#</th><th>Date</th><th>IN</th><th>OUT</th><th>Action</th></tr>
   {% for row in view.recent %}
   <tr class="{{ 'open' if row.open else 'closed' }}">
-    <td>{{ row.id }}</td>
-    <td>{{ row.date }}</td>
-    <td>{{ row.in }}</td>
-    <td>{{ 'open' if row.open else row.out }}</td>
+    <td><a class="entry-link" href="/times/entry/{{ row.id }}">{{ row.id }}</a></td>
+    <td><a class="entry-link" href="/times/entry/{{ row.id }}">{{ row.date }}</a></td>
+    <td><a class="entry-link" href="/times/entry/{{ row.id }}">{{ row.in }}</a></td>
+    <td><a class="entry-link" href="/times/entry/{{ row.id }}">{{ 'open' if row.open else row.out }}</a></td>
+    <td><a class="entry-link" href="/times/entry/{{ row.id }}">Edit</a></td>
   </tr>
   {% endfor %}
 </table>

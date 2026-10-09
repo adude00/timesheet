@@ -14,6 +14,7 @@ Data is a single SQLite file. The app is single-user: no accounts, no login.
 | `/times` | Add a completed interval, add a missing IN, close an open interval, correct an interval, delete an accidental one |
 | `/report` | Month report (`/report?month=YYYY-MM`, defaults to the current month) |
 | `/report/2024-06.csv` | CSV download for that month |
+| `/times/entry/3` | One entry, clicked from either interval list: shows it and offers **Edit** with a form pre-filled with the recorded values |
 | `/health` | `{"status": "ok"}` — for CI/production checks |
 
 IN and OUT are disabled in the page when they do not apply, and the server

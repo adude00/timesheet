@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entry #{{ entry.id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<h1>Entry #{{ entry.id }}</h1>
+<p class="tz">Times are local to <strong>{{ timezone }}</strong>; the server converts and stores them.</p>
+
+{% if flash %}
+<p class="flash flash-{{ flash.kind }}" role="status"><strong>{{ flash.text }}</strong></p>
+{% endif %}
+
+<p class="recorded">
+  Recorded: <strong>{{ entry.start_date }} {{ entry.start_time }} &mdash;
+  {{ 'open' if entry.open else entry.end_date ~ ' ' ~ entry.end_time }}</strong>
+</p>
+
+{% macro field(name, label, default='') %}
+<span class="field">
+  <label>{{ label }}</label>
+  <input type="text" name="{{ name }}" value="{{ default }}">
+</span>
+{% endmacro %}
+
+<h2>Choose an action</h2>
+<form method="post" action="/times/edit" class="op">
+  <input type="hidden" name="interval_id" value="{{ entry.id }}">
+  {{ field('start_date', 'New start date (blank = keep)', entry.start_date) }}
+  {{ field('start_time', 'New start time (blank = keep)', entry.start_time) }}
+  {{ field('start_offset', 'New start offset (only if the time repeats)', '') }}
+  {{ field('end_date', 'New end date (blank = keep)', entry.end_date) }}
+  {{ field('end_time', 'New end time (blank = keep)', entry.end_time) }}
+  {{ field('end_offset', 'New end offset (only if the time repeats)', '') }}
+  <input type="hidden" name="_t" value="{{ csrf }}">
+  <input type="hidden" name="_op" value="{{ op }}">
+  <button type="submit" class="big">Edit entry #{{ entry.id }}</button>
+</form>
+
+<p class="links"><a href="/">Home</a> &middot; <a href="/times">Add / correct times</a></p>
+</body>
+</html>

@@ -191,3 +191,70 @@ def test_manual_close_without_end_shows_form_error(tmp_path):
     )
     assert response.status_code == 200
     assert "Enter the end time" in response.text
+
+
+def test_interval_rows_link_to_their_entry_page(tmp_path):
+    """Clicking an entry in the /times list opens its own page."""
+    server_clock.set_now(1_717_236_000)
+    _app, client = _make(tmp_path)
+    _c, _response = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-05-30", "start_time": "09:00", "end_date": "2024-05-30",
+         "end_time": "12:00"},
+    )
+    page = client.get("/times")
+    assert 'href="/times/entry/1"' in page.text
+
+
+def test_entry_page_prefills_the_edit_form(tmp_path):
+    """The entry page shows the recorded values and offers Edit, pre-filled."""
+    server_clock.set_now(1_717_236_000)  # 2024-06-01 12:00 Europe/Rome
+    _app, client = _make(tmp_path)
+    _c, added = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-06-01", "start_time": "09:00", "end_date": "2024-06-01",
+         "end_time": "12:00"},
+    )
+    assert "Saved: interval #1 recorded" in added.text
+    page = client.get("/times/entry/1")
+    assert "Edit entry #1" in page.text
+    assert 'name="start_time" value="09:00"' in page.text
+    assert 'name="end_time" value="12:00"' in page.text
+
+
+def test_edit_from_entry_page_changes_the_interval(tmp_path):
+    """Submitting the entry page's edit form moves the endpoints, not the row."""
+    server_clock.set_now(1_717_236_000)  # 2024-06-01 12:00 Europe/Rome
+    _app, client = _make(tmp_path)
+    _c, added = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-06-01", "start_time": "09:00", "end_date": "2024-06-01",
+         "end_time": "12:00"},
+    )
+    assert "Saved: interval #1 recorded" in added.text
+    page = client.get("/times/entry/1")
+    csrf = re.search(r'name="_t" value="([^"]+)"', page.text).group(1)
+    op = re.search(r'name="_op" value="([^"]+)"', page.text).group(1)
+    response = client.post(
+        "/times/edit",
+        data={"_t": csrf, "_op": op, "interval_id": "1",
+              "start_date": "2024-06-01", "start_time": "08:00",
+              "end_date": "2024-06-01", "end_time": "11:00"},
+        follow_redirects=True,
+    )
+    assert "corrected" in response.text
+    db = Db(tmp_path / "timesheet.sqlite3")
+    rows = db.fetch_all()
+    assert len(rows) == 1
+    assert rows[0][1] == 1_717_221_600 and rows[0][2] == 1_717_232_400  # 08:00-11:00 Rome
+
+
+def test_entry_page_of_a_missing_interval_redirects_with_error(tmp_path):
+    server_clock.set_now(1_717_236_000)
+    _app, client = _make(tmp_path)
+    response = client.get("/times/entry/999", follow_redirects=True)
+    assert response.status_code == 200
+    assert "no longer exists" in response.text
