@@ -20,6 +20,16 @@
   <strong>not</strong> counted in the totals.</p>
 {% endif %}
 
+<form method="post" action="/report" class="month-select">
+  <label for="month">Choose another month:
+  <select name="month">
+    {% for m in months %}<option value="{{ m }}">{{ m }}</option>
+    {% endfor %}
+  </select></label>
+  <input type="hidden" name="_t" value="{{ csrf }}">
+  <button type="submit" class="big">Show month</button>
+</form>
+
 <table class="report">
   <tr><th>Date</th><th>Weekday</th><th>IN</th><th>OUT</th><th>Day total</th></tr>
   {% for day in view.days %}

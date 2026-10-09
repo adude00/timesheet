@@ -80,12 +80,18 @@
 <h2>Correct an existing interval</h2>
 <form method="post" action="/times/edit" class="op">
   {{ field('interval_id', 'Interval #', first_id) }}
-  {{ field('start_date', 'New start date (blank = keep)', '') }}
-  {{ field('start_time', 'New start time (blank = keep)', '') }}
-  {{ field('start_offset', 'New start offset', '') }}
-  {{ field('end_date', 'New end date (blank = keep)', '') }}
-  {{ field('end_time', 'New end time (blank = keep)', '') }}
-  {{ field('end_offset', 'New end offset', '') }}
+  <div class="edit-group">
+    <div class="group-label">New IN (start) &mdash; blank = keep</div>
+    {{ field('start_date', 'Date (YYYY-MM-DD)', '') }}
+    {{ field('start_time', 'Time (HH:MM)', '') }}
+    {{ field('start_offset', 'Offset (only if the time repeats)', '') }}
+  </div>
+  <div class="edit-group">
+    <div class="group-label">New OUT (end) &mdash; blank = keep</div>
+    {{ field('end_date', 'Date (YYYY-MM-DD)', '') }}
+    {{ field('end_time', 'Time (HH:MM)', '') }}
+    {{ field('end_offset', 'Offset (only if the time repeats)', '') }}
+  </div>
   <input type="hidden" name="_t" value="{{ csrf }}">
   <input type="hidden" name="_op" value="{{ op }}">
   <button type="submit" class="big">Correct interval</button>

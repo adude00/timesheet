@@ -12,7 +12,7 @@ Data is a single SQLite file. The app is single-user: no accounts, no login.
 | --- | --- |
 | `/` | Status ("At work since …" / "Not at work"), big IN and OUT buttons, today's recorded hours, recent entries |
 | `/times` | Add a completed interval, add a missing IN, close an open interval, correct an interval, delete an accidental one |
-| `/report` | Month report (`/report?month=YYYY-MM`, defaults to the current month) |
+| `/report` | Month report (`/report?month=YYYY-MM`, defaults to the current month; the page also has a dropdown to switch months) |
 | `/report/2024-06.csv` | CSV download for that month |
 | `/times/entry/3` | One entry, clicked from either interval list: shows it and offers **Edit** (form pre-filled with the recorded values) and **Delete** (needs the DELETE confirmation) |
 | `/health` | `{"status": "ok"}` — for CI/production checks |

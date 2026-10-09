@@ -219,7 +219,7 @@ def test_entry_page_prefills_the_edit_form(tmp_path):
     )
     assert "Saved: interval #1 recorded" in added.text
     page = client.get("/times/entry/1")
-    assert "Edit entry #1" in page.text
+    assert ">Save</button>" in page.text
     assert 'name="start_time" value="09:00"' in page.text
     assert 'name="end_time" value="12:00"' in page.text
 
@@ -318,3 +318,91 @@ def test_confirmed_delete_from_entry_page_removes_the_row(tmp_path):
     assert "deleted" in response.text
     db = Db(tmp_path / "timesheet.sqlite3")
     assert db.fetch_all() == []
+
+
+def test_edit_from_entry_page_returns_home_not_the_general_edit_page(tmp_path):
+    server_clock.set_now(1_717_236_000)
+    _app, client = _make(tmp_path)
+    _c, added = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-06-01", "start_time": "09:00", "end_date": "2024-06-01",
+         "end_time": "12:00"},
+    )
+    assert "Saved: interval #1 recorded" in added.text
+    page = client.get("/times/entry/1")
+    csrf = re.search(r'name="_t" value="([^"]+)"', page.text).group(1)
+    op = re.search(r'name="_op" value="([^"]+)"', page.text).group(1)
+    response = client.post(
+        "/times/edit",
+        data={"_t": csrf, "_op": op, "interval_id": "1", "from": "entry",
+              "start_date": "2024-06-01", "start_time": "08:00",
+              "end_date": "2024-06-01", "end_time": "11:00"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/"
+
+
+def test_edit_from_times_page_still_returns_to_times(tmp_path):
+    server_clock.set_now(1_717_236_000)
+    _app, client = _make(tmp_path)
+    _c, added = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-06-01", "start_time": "09:00", "end_date": "2024-06-01",
+         "end_time": "12:00"},
+    )
+    assert "Saved: interval #1 recorded" in added.text
+    page = client.get("/times")
+    csrf = re.search(r'name="_t" value="([^"]+)"', page.text).group(1)
+    op = re.search(r'name="_op" value="([^"]+)"', page.text).group(1)
+    response = client.post(
+        "/times/edit",
+        data={"_t": csrf, "_op": op, "interval_id": "1",
+              "start_date": "2024-06-01", "start_time": "08:00",
+              "end_date": "2024-06-01", "end_time": "11:00"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert response.headers["Location"] == "/times"
+
+
+def test_report_dropdown_lists_months_with_data(tmp_path):
+    server_clock.set_now(1_719_741_600)  # 2024-06-30 12:00 Rome
+    _app, client = _make(tmp_path)
+    _c, _response = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-05-30", "start_time": "09:00", "end_date": "2024-05-30",
+         "end_time": "12:00"},
+    )
+    page = client.get("/report")
+    assert '<option value="2024-05">' in page.text
+    assert '<option value="2024-06">' in page.text
+
+
+def test_report_dropdown_submission_shows_that_month(tmp_path):
+    server_clock.set_now(1_719_741_600)  # 2024-06-30 12:00 Rome
+    _app, client = _make(tmp_path)
+    _c, _response = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-05-30", "start_time": "09:00", "end_date": "2024-05-30",
+         "end_time": "12:00"},
+    )
+    page = client.get("/report")
+    csrf = re.search(r'name="_t" value="([^"]+)"', page.text).group(1)
+    response = client.post(
+        "/report",
+        data={"_t": csrf, "month": "2024-05"},
+        follow_redirects=True,
+    )
+    assert "Month: <strong>2024-05</strong>" in response.text
+    assert "3:00" in response.text
+
+
+def test_report_dropdown_without_csrf_is_rejected(tmp_path):
+    _app, client = _make(tmp_path)
+    response = client.post("/report", data={"month": "2024-05"})
+    assert response.status_code == 400

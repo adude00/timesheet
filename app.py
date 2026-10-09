@@ -492,7 +492,9 @@ def make_app(
                 f"Saved: interval #{result['interval_id']} corrected."
             ),
         )
-        return redirect("/times", code=303)
+        # Editing from an entry page returns to the calm home page, not the
+        # general edit page; from /times it stays on /times.
+        return redirect("/" if request.form.get("from") == "entry" else "/times", code=303)
 
     @app.route("/times/delete", methods=["POST"])
     def times_delete():
@@ -508,10 +510,9 @@ def make_app(
             return redirect("/times", code=303)
         result = db.delete_interval(interval_id, token=token)
         _flash_db(
-            result,
-            lambda result: f"Saved: interval #{result['interval_id']} deleted.",
+            result, lambda result: f"Saved: interval #{result['interval_id']} deleted.",
         )
-        return redirect("/times", code=303)
+        return redirect("/" if request.form.get("from") == "entry" else "/times", code=303)
 
     def _interval_id(errors):
         raw = request.form.get("interval_id", "").strip()
@@ -555,8 +556,40 @@ def make_app(
             timezone=tz_name(tz),
         )
 
-    @app.route("/report")
+    def _month_options():
+        """Months worth offering in the report dropdown: current month plus
+        every month that holds an interval, newest first."""
+        months = set()
+        for _row_id, start, end, _c, _u in db.fetch_all():
+            year, month, _d, _hh, _mm = utc_to_local(tz, start)
+            months.add(f"{year:04d}-{month:02d}")
+            if end is not None:
+                year, month, _d, _hh, _mm = utc_to_local(tz, end)
+                months.add(f"{year:04d}-{month:02d}")
+        now = server_clock.now()
+        year, month, _d, _hh, _mm = utc_to_local(tz, now)
+        months.add(f"{year:04d}-{month:02d}")
+        return sorted(months, reverse=True)
+
+    @app.route("/report", methods=["GET", "POST"])
     def report_page():
+        months = _month_options()
+        if request.method == "POST":
+            # The dropdown form: navigation only, but CSRF-checked like every
+            # other form.  Redirect (PRG) to the canonical GET URL.
+            _csrf_ok() or _csrf_fail()
+            year, month, problem = _month_from_args_from(request.form.get("month", ""))
+            if problem:
+                return render_template(
+                    "report.html",
+                    view=None,
+                    problem=problem,
+                    month_hint=_month_hint(),
+                    months=months,
+                    csrf=session.get("csrf", ""),
+                )
+            return redirect(f"/report?month={year:04d}-{month:02d}", code=303)
+        _ensure_tokens()
         year, month, problem = _month_from_args()
         if problem:
             return render_template(
@@ -564,9 +597,14 @@ def make_app(
                 view=None,
                 problem=problem,
                 month_hint=_month_hint(),
+                months=months,
+                csrf=session["csrf"],
             )
         view = _report_view(build_report(db, tz, year, month))
-        return render_template("report.html", view=view, problem=None, month_hint=_month_hint())
+        return render_template(
+            "report.html", view=view, problem=None, month_hint=_month_hint(),
+            months=months, csrf=session["csrf"],
+        )
 
     @app.route("/report/<month_arg>.csv")
     def report_csv(month_arg):
