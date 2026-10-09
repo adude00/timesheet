@@ -39,6 +39,14 @@
   <button type="submit" class="big">Edit entry #{{ entry.id }}</button>
 </form>
 
+<form method="post" action="/times/delete" class="op">
+  <input type="hidden" name="interval_id" value="{{ entry.id }}">
+  {{ field('confirm', 'Type DELETE to confirm', '') }}
+  <input type="hidden" name="_t" value="{{ csrf }}">
+  <input type="hidden" name="_op" value="{{ op }}">
+  <button type="submit" class="big">Delete entry #{{ entry.id }}</button>
+</form>
+
 <p class="links"><a href="/">Home</a> &middot; <a href="/times">Add / correct times</a></p>
 
 <p class="footnote">Times are local to <strong>{{ timezone }}</strong>; the server converts and stores them.</p>

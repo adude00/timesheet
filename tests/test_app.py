@@ -258,3 +258,63 @@ def test_entry_page_of_a_missing_interval_redirects_with_error(tmp_path):
     response = client.get("/times/entry/999", follow_redirects=True)
     assert response.status_code == 200
     assert "no longer exists" in response.text
+
+
+def test_entry_page_offers_delete(tmp_path):
+    server_clock.set_now(1_717_236_000)
+    _app, client = _make(tmp_path)
+    _c, added = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-06-01", "start_time": "09:00", "end_date": "2024-06-01",
+         "end_time": "12:00"},
+    )
+    assert "Saved: interval #1 recorded" in added.text
+    page = client.get("/times/entry/1")
+    assert "Delete entry #1" in page.text
+
+
+def test_delete_without_confirmation_is_rejected(tmp_path):
+    server_clock.set_now(1_717_236_000)
+    _app, client = _make(tmp_path)
+    _c, added = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-06-01", "start_time": "09:00", "end_date": "2024-06-01",
+         "end_time": "12:00"},
+    )
+    assert "Saved: interval #1 recorded" in added.text
+    page = client.get("/times/entry/1")
+    csrf = re.search(r'name="_t" value="([^"]+)"', page.text).group(1)
+    op = re.search(r'name="_op" value="([^"]+)"', page.text).group(1)
+    response = client.post(
+        "/times/delete",
+        data={"_t": csrf, "_op": op, "interval_id": "1", "confirm": ""},
+        follow_redirects=True,
+    )
+    assert "Type DELETE" in response.text
+    db = Db(tmp_path / "timesheet.sqlite3")
+    assert len(db.fetch_all()) == 1
+
+
+def test_confirmed_delete_from_entry_page_removes_the_row(tmp_path):
+    server_clock.set_now(1_717_236_000)
+    _app, client = _make(tmp_path)
+    _c, added = _post(
+        tmp_path,
+        "/times/add",
+        {"start_date": "2024-06-01", "start_time": "09:00", "end_date": "2024-06-01",
+         "end_time": "12:00"},
+    )
+    assert "Saved: interval #1 recorded" in added.text
+    page = client.get("/times/entry/1")
+    csrf = re.search(r'name="_t" value="([^"]+)"', page.text).group(1)
+    op = re.search(r'name="_op" value="([^"]+)"', page.text).group(1)
+    response = client.post(
+        "/times/delete",
+        data={"_t": csrf, "_op": op, "interval_id": "1", "confirm": "DELETE"},
+        follow_redirects=True,
+    )
+    assert "deleted" in response.text
+    db = Db(tmp_path / "timesheet.sqlite3")
+    assert db.fetch_all() == []
