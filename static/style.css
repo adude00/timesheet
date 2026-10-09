@@ -30,6 +30,7 @@ a { color: #1a4d80; }
 .footnote { font-size: 0.85rem; color: #444; }
 .edit-group { margin-bottom: 0.7rem; }
 .group-label { font-weight: 600; font-size: 0.9rem; }
+.delete-form { margin-top: 2rem; }
 
 /* Touch targets: big buttons, comfortable padding. */
 .punch { display: flex; gap: 0.75rem; }
