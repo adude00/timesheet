@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Work timesheet</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<h1>Timesheet</h1>
+
+<p class="tz">Timezone: <strong>{{ view.timezone }}</strong> &mdash; punches use the server clock.</p>
+
+{% if flash %}
+<p class="flash flash-{{ flash.kind }}" role="status"><strong>{{ flash.text }}</strong></p>
+{% endif %}
+
+<p class="status status-{{ view.status_kind }}"><strong>Status: {{ view.status }}</strong></p>
+
+<p class="today">
+  Recorded today (completed intervals only): <strong>{{ view.today_hhmm }}</strong>
+  <span class="secondary">({{ view.today_decimal }} h decimal)</span>
+  {% if view.live_hhmm %}
+  <span class="live">Live since IN, not counted yet: {{ view.live_hhmm }}</span>
+  {% endif %}
+</p>
+
+<div class="punch">
+  {% if view.can_in %}
+  <form class="punch" method="post" action="/punch">
+    <input type="hidden" name="_t" value="{{ csrf }}">
+    <input type="hidden" name="_op" value="{{ op }}">
+    <input type="hidden" name="action" value="in">
+    <button type="submit" class="big big-in">IN</button>
+  </form>
+  {% else %}
+  <p class="disabled">IN is disabled &mdash; an interval is already open.</p>
+  {% endif %}
+
+  {% if view.can_out %}
+  <form class="punch" method="post" action="/punch">
+    <input type="hidden" name="_t" value="{{ csrf }}">
+    <input type="hidden" name="_op" value="{{ op }}">
+    <input type="hidden" name="action" value="out">
+    <button type="submit" class="big big-out">OUT</button>
+  </form>
+  {% else %}
+  <p class="disabled">OUT is disabled &mdash; there is no open interval to close.</p>
+  {% endif %}
+</div>
+
+<h2>Recent entries</h2>
+{% if view.recent %}
+<table class="recent">
+  <tr><th>#</th><th>Date</th><th>IN</th><th>OUT</th></tr>
+  {% for row in view.recent %}
+  <tr class="{{ 'open' if row.open else 'closed' }}">
+    <td>{{ row.id }}</td>
+    <td>{{ row.date }}</td>
+    <td>{{ row.in }}</td>
+    <td>{{ 'open' if row.open else row.out }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="empty">Nothing recorded yet.</p>
+{% endif %}
+
+<p class="links">
+  <a href="/times">Add / correct times</a>
+  &middot; <a href="/report">Monthly report</a>
+  &middot; <a href="/report?month={{ view.month_hint }}">this month</a>
+</p>
+</body>
+</html>

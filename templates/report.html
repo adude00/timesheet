@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monthly report</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<h1>Monthly report</h1>
+{% if problem %}
+<p class="flash flash-error"><strong>{{ problem }}</strong></p>
+<p>Showing the current month: <a href="/report?month={{ month_hint }}">{{ month_hint }}</a></p>
+{% else %}
+<p class="month">Month: <strong>{{ view.month }}</strong> &mdash; timezone <strong>{{ view.timezone }}</strong></p>
+<p class="total">Monthly total (completed intervals): <strong class="total">{{ view.total }}</strong>
+  <span class="secondary">({{ view.total_decimal }} h decimal)</span></p>
+{% if view.open_intervals %}
+<p class="open-note"><strong>{{ view.open_intervals }}</strong> open interval(s) are shown but
+  <strong>not</strong> counted in the totals.</p>
+{% endif %}
+
+<table class="report">
+  <tr><th>Date</th><th>Weekday</th><th>IN</th><th>OUT</th><th>Day total</th></tr>
+  {% for day in view.days %}
+  <tr class="{{ 'open' if day.open else ('work' if day.rows else 'empty') }}">
+    <td>{{ day.date }}</td>
+    <td>{{ day.weekday }}</td>
+    <td>{% for row in day.rows %}<span class="{{ 'continued' if row.continued else 'in' }}">{{ row.in }}</span><br>{% endfor %}</td>
+    <td>{% for row in day.rows %}<span class="{{ 'continued' if row.continued else 'out' }}">{{ row.out }}</span><br>{% endfor %}</td>
+    <td class="daytotal">{{ day.total }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<p class="links">
+  <a href="/report/{{ view.month }}.csv">Download CSV</a>
+  &middot; <a href="/">Home</a>
+</p>
+<button class="print-btn" onclick="window.print()">Print</button>
+{% endif %}
+</body>
+</html>

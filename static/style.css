@@ -1,0 +1,60 @@
+/* Small, self-hosted stylesheet. No third-party fonts, scripts or CDNs. */
+:root {
+  font-size: 100%;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  margin: 0.5rem;
+  background: #ffffff;
+  color: #111111;
+  line-height: 1.4;
+}
+h1 { font-size: 1.3rem; }
+h2 { font-size: 1.05rem; margin-top: 1.2rem; }
+a { color: #1a4d80; }
+
+/* Status is text, never colour alone. */
+.status-open { border-style: solid; border-width: 0.15rem; padding: 0.4rem; }
+.status-closed { border-style: dashed; border-width: 0.1rem; padding: 0.4rem; }
+.status { font-size: 1.15rem; }
+
+.flash-success { border-style: solid; border-width: 0.15rem; padding: 0.5rem; }
+.flash-error { border-style: solid; border-width: 0.2rem; padding: 0.5rem; }
+.flash { font-size: 1.05rem; }
+.field-error { font-size: 0.95rem; border-style: dotted; border-width: 0.1rem; padding: 0.2rem; }
+.disabled { font-style: italic; }
+.continued { font-style: italic; }
+.secondary { font-size: 0.85rem; }
+.live { font-size: 0.9rem; }
+
+/* Touch targets: big buttons, comfortable padding. */
+.punch { display: flex; gap: 0.75rem; }
+.punch-form { display: inline-block; }
+.punch-form button.big {
+  min-width: 8rem;
+  min-height: 3.2rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  border-width: 0.15rem;
+  border-style: solid;
+}
+.op button.big { min-height: 2.6rem; font-size: 1.05rem; }
+.field { display: inline-block; margin-right: 0.4rem; }
+.field input { width: 9rem; }
+
+table { border-collapse: collapse; width: 100%; }
+th, td { border-width: 0.06rem; border-style: solid; padding: 0.25rem 0.35rem; }
+.total { font-size: 1.3rem; }
+.daytotal { font-weight: 600; }
+.empty { color: #333; }
+
+/* Print: drop the buttons, keep the numbers. */
+@media print {
+  body { color: #000; background: none; font-size: 10pt; }
+  .punch, .punch-form, button, .op, .links, .flash { display: none; }
+  table { width: 100%; }
+  thead { display: table-header-group; }
+  tr { page-break-inside: avoid; }
+  a { color: #000; text-decoration: none; }
+}

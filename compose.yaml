@@ -1,0 +1,30 @@
+# Single-user timesheet. The database is one file under /data inside the image.
+# Copy .env.example to .env first (SECRET_KEY is required).
+services:
+  timesheet:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      # --- option 1 (active): bind mount a directory; the file lives inside it.
+      # Prepare the host side first so uid 10001 can write it:
+      #   install -d -m 0775 data
+      #   install -m 0664 /dev/null data/timesheet.sqlite3
+      - ./data:/data
+
+      # --- option 2 (alternative): bind mount the single file itself. ---
+      # Uncomment only once the file already exists, otherwise Docker creates
+      # a *directory* at that path and SQLite will fail to start.
+      # - ./data/timesheet.sqlite3:/data/timesheet.sqlite3
+
+      # --- option 3 (alternative): named volume, easiest first run. ---
+      # Docker creates it; chown it to uid 10001 (or let the app create the
+      # file, see README "First run").
+      # - timesheet-data:/data
+
+    # Backup and first-run ownership: see README.md ("Backup", "Permissions").
+
+volumes:
+  timesheet-data:

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add / correct times</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<h1>Add / correct times</h1>
+<p class="tz">Times are local to <strong>{{ timezone }}</strong>; the server converts and stores them.
+  The <strong>end date</strong> is asked for explicitly so overnight work is not ambiguous.</p>
+
+{% if flash %}
+<p class="flash flash-{{ flash.kind }}" role="status"><strong>{{ flash.text }}</strong></p>
+{% endif %}
+
+{% macro field(name, label, default='') %}
+<span class="field">
+  <label>{{ label }}</label>
+  <input type="text" name="{{ name }}" value="{{ echo.fields.get(name, default) }}">
+  {% if echo.errors.get(name) %}
+  <span class="field-error field-{{ name }}">{{ echo.errors[name] }}</span>
+  {% endif %}
+</span>
+{% endmacro %}
+
+<h2>Existing intervals</h2>
+{% if intervals %}
+<table class="intervals">
+  <tr><th>#</th><th>Date</th><th>IN</th><th>OUT</th></tr>
+  {% for row in intervals %}
+  <tr class="{{ 'open' if row.open else 'closed' }}">
+    <td>{{ row.id }}</td><td>{{ row.date }}</td><td>{{ row.in }}</td>
+    <td>{{ 'open' if row.open else row.out }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="empty">No intervals recorded yet.</p>
+{% endif %}
+
+<h2>Add a completed interval</h2>
+<form method="post" action="/times/add" class="op">
+  {{ field('start_date', 'Start date (YYYY-MM-DD)', today) }}
+  {{ field('start_time', 'Start time (HH:MM)', '') }}
+  {{ field('start_offset', 'Start offset (only if the time repeats)', '') }}
+  {{ field('end_date', 'End date (YYYY-MM-DD)', today) }}
+  {{ field('end_time', 'End time (HH:MM)', '') }}
+  {{ field('end_offset', 'End offset (only if the time repeats)', '') }}
+  <input type="hidden" name="_t" value="{{ csrf }}">
+  <input type="hidden" name="_op" value="{{ op }}">
+  <button type="submit" class="big">Add interval</button>
+</form>
+
+<h2>Add a missing IN (leaves the interval open)</h2>
+<form method="post" action="/times/add" class="op">
+  {{ field('start_date', 'Start date (YYYY-MM-DD)', today) }}
+  {{ field('start_time', 'Start time (HH:MM)', '') }}
+  {{ field('start_offset', 'Start offset (only if the time repeats)', '') }}
+  <input type="hidden" name="end_date" value="">
+  <input type="hidden" name="end_time" value="">
+  <input type="hidden" name="_t" value="{{ csrf }}">
+  <input type="hidden" name="_op" value="{{ op }}">
+  <button type="submit" class="big">Add missing IN</button>
+</form>
+
+<h2>Close an open interval with a manual OUT time</h2>
+<form method="post" action="/times/close" class="op">
+  {{ field('interval_id', 'Interval #', first_id) }}
+  {{ field('end_date', 'End date (YYYY-MM-DD)', today) }}
+  {{ field('end_time', 'End time (HH:MM)', '') }}
+  {{ field('end_offset', 'End offset (only if the time repeats)', '') }}
+  <input type="hidden" name="_t" value="{{ csrf }}">
+  <input type="hidden" name="_op" value="{{ op }}">
+  <button type="submit" class="big">Close interval</button>
+</form>
+
+<h2>Correct an existing interval</h2>
+<form method="post" action="/times/edit" class="op">
+  {{ field('interval_id', 'Interval #', first_id) }}
+  {{ field('start_date', 'New start date (blank = keep)', '') }}
+  {{ field('start_time', 'New start time (blank = keep)', '') }}
+  {{ field('start_offset', 'New start offset', '') }}
+  {{ field('end_date', 'New end date (blank = keep)', '') }}
+  {{ field('end_time', 'New end time (blank = keep)', '') }}
+  {{ field('end_offset', 'New end offset', '') }}
+  <input type="hidden" name="_t" value="{{ csrf }}">
+  <input type="hidden" name="_op" value="{{ op }}">
+  <button type="submit" class="big">Correct interval</button>
+</form>
+
+<h2>Delete an accidental interval</h2>
+<form method="post" action="/times/delete" class="op">
+  {{ field('interval_id', 'Interval #', first_id) }}
+  {{ field('confirm', 'Type DELETE to confirm', '') }}
+  <input type="hidden" name="_t" value="{{ csrf }}">
+  <input type="hidden" name="_op" value="{{ op }}">
+  <button type="submit" class="big">Delete interval</button>
+</form>
+
+<p class="links"><a href="/">Home</a> &middot; <a href="/report">Monthly report</a></p>
+</body>
+</html>
