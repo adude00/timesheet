@@ -9,8 +9,6 @@
 <body>
 <h1>Timesheet</h1>
 
-<p class="tz">Timezone: <strong>{{ view.timezone }}</strong> &mdash; punches use the server clock.</p>
-
 {% if flash %}
 <p class="flash flash-{{ flash.kind }}" role="status"><strong>{{ flash.text }}</strong></p>
 {% endif %}
@@ -72,5 +70,7 @@
   &middot; <a href="/report">Monthly report</a>
   &middot; <a href="/report?month={{ view.month_hint }}">this month</a>
 </p>
+
+<p class="footnote">Timezone: <strong>{{ view.timezone }}</strong> &mdash; punches use the server clock.</p>
 </body>
 </html>

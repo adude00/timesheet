@@ -8,7 +8,6 @@
 </head>
 <body>
 <h1>Entry #{{ entry.id }}</h1>
-<p class="tz">Times are local to <strong>{{ timezone }}</strong>; the server converts and stores them.</p>
 
 {% if flash %}
 <p class="flash flash-{{ flash.kind }}" role="status"><strong>{{ flash.text }}</strong></p>
@@ -41,5 +40,7 @@
 </form>
 
 <p class="links"><a href="/">Home</a> &middot; <a href="/times">Add / correct times</a></p>
+
+<p class="footnote">Times are local to <strong>{{ timezone }}</strong>; the server converts and stores them.</p>
 </body>
 </html>

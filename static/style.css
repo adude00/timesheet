@@ -27,6 +27,7 @@ a { color: #1a4d80; }
 .continued { font-style: italic; }
 .secondary { font-size: 0.85rem; }
 .live { font-size: 0.9rem; }
+.footnote { font-size: 0.85rem; color: #444; }
 
 /* Touch targets: big buttons, comfortable padding. */
 .punch { display: flex; gap: 0.75rem; }

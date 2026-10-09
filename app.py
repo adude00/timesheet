@@ -368,8 +368,7 @@ def make_app(
         if action == "in":
             result = db.punch_in(token=token)
             text = lambda result: (  # noqa: E731
-                f"Saved: IN recorded at {format_clock(tz, result['start_utc'])} "
-                f"({tz_name(tz)})."
+                f"Saved: IN recorded at {format_clock(tz, result['start_utc'])}."
             )
         elif action == "out":
             result = db.punch_out(token=token)

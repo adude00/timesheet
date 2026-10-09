@@ -156,8 +156,8 @@ then set `TRUST_PROXY=1`, e.g.
 
 ```nginx
 location / {
-  upstream_backend;
-  set X-Forwarded-Proto $scheme;   # Flask reads this only when TRUST_PROXY=1
+  proxy_pass http://127.0.0.1:10801;   # host port from compose.yaml (10801:8080)
+  X-Forwarded-Proto $scheme;           # Flask reads this only when TRUST_PROXY=1
 }
 ```
 
