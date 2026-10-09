@@ -49,7 +49,7 @@ docker compose build
 docker compose up -d
 ```
 
-Open <http://localhost:8080>. The database file
+Open <http://localhost:10801>. The database file
 `data/timesheet.sqlite3` is created on the first run; nothing else is stored.
 
 ### Bind mount vs volume
@@ -182,7 +182,7 @@ Tests (TDD slices, all in `tests/`):
 ## CI / production verification
 
 ```sh
-curl -fsS localhost:8080/health          # {"status":"ok"}
+curl -fsS localhost:10801/health          # {"status":"ok"}
 docker compose exec timesheet /app/.venv/bin/pytest -q -p no:cacheprovider   # full suite inside the image
 ```
 
