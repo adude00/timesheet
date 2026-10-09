@@ -3,6 +3,5 @@ __pycache__
 *.pyc
 .git
 .gitignore
-.env
 data
 AGENT_INSTRUCTIONS.md
